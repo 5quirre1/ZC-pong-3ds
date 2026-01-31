@@ -1,0 +1,22 @@
+import "3ds.h";
+import "citro2d.h";
+import "defs.zc";
+
+fn draw_game(top: C3D_RenderTarget*, p1_y: int, p2_y: int, 
+             ball_x: int, ball_y: int, white: u32, black: u32) {
+    C2D_SceneBegin(top);
+    C2D_TargetClear(top, black);
+    
+    C2D_DrawRectSolid(P1_X, p1_y, 0.5, PADDLE_W, PADDLE_H, white);
+    C2D_DrawRectSolid(P2_X, p2_y, 0.5, PADDLE_W, PADDLE_H, white);
+    
+    C2D_DrawRectSolid(ball_x, ball_y, 0.5, BALL_SIZE, BALL_SIZE, white);
+}
+
+fn draw_score(score1: int, score2: int, last_score1: int, last_score2: int) -> bool {
+    if (score1 != last_score1 || score2 != last_score2) {
+        printf("\x1b[2J\x1b[10;8HPlayer 1: %d    Player 2: %d", score1, score2);
+        return true;
+    }
+    return false;
+}

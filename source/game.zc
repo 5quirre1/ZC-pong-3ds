@@ -1,0 +1,62 @@
+import "defs.zc";
+
+fn update_player_paddle(p1_y: int, kHeld: u32) -> int {
+    let p1_max = SCREEN_HEIGHT - PADDLE_H;
+    
+    if (kHeld & KEY_DUP && p1_y > 0) {
+        return p1_y - PADDLE_SPEED;
+    }
+    if (kHeld & KEY_DDOWN && p1_y < p1_max) {
+        return p1_y + PADDLE_SPEED;
+    }
+    return p1_y;
+}
+
+fn update_ai_paddle(p2_y: int, ball_y: int, should_update: bool) -> int {
+    if (!should_update) { return p2_y; }
+    
+    let p2_max = SCREEN_HEIGHT - PADDLE_H;
+    let ball_center_y = ball_y + (BALL_SIZE / 2);
+    let p2_center = p2_y + (PADDLE_H / 2);
+    let diff = ball_center_y - p2_center;
+    
+    if (diff > AI_DEAD_ZONE && p2_y < p2_max) {
+        return p2_y + AI_SPEED;
+    } else if (diff < -AI_DEAD_ZONE && p2_y > 0) {
+        return p2_y - AI_SPEED;
+    }
+    return p2_y;
+}
+
+fn check_paddle_collision(ball_x: int, ball_y: int, ball_dx: int, 
+                          paddle_y: int, is_left: bool) -> bool {
+    let ball_right = ball_x + BALL_SIZE;
+    let ball_bottom = ball_y + BALL_SIZE;
+    
+    if (is_left) {
+        let p1_right = P1_X + PADDLE_W;
+        if (ball_x <= p1_right && ball_x > P1_X && ball_dx < 0) {
+            if (ball_bottom > paddle_y && ball_y < paddle_y + PADDLE_H) {
+                return true;
+            }
+        }
+    } else {
+        if (ball_right >= P2_X && ball_x < P2_X && ball_dx > 0) {
+            if (ball_bottom > paddle_y && ball_y < paddle_y + PADDLE_H) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+fn calculate_bounce_angle(ball_y: int, paddle_y: int) -> int {
+    let hit_pos = (ball_y + (BALL_SIZE / 2)) - paddle_y;
+    
+    if (hit_pos < 15) {
+        return -2;
+    } else if (hit_pos > 35) {
+        return 2;
+    }
+    return 2;
+}

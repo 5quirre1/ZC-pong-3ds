@@ -1,0 +1,24 @@
+// screen stuff
+def SCREEN_WIDTH  = 400;
+def SCREEN_HEIGHT = 240;
+
+// game obj sizes
+def PADDLE_W      = 10;
+def PADDLE_H      = 50;
+def BALL_SIZE     = 8;
+
+// speeds
+def PADDLE_SPEED  = 3;
+def AI_SPEED      = 2;
+def AI_DEAD_ZONE  = 10;
+
+// start pos
+def PADDLE_START_Y = 95;
+def BALL_START_X   = 200;
+def BALL_START_Y   = 120;
+def BALL_START_VX  = 2;
+def BALL_START_VY  = 2;
+
+// paddle pos
+def P1_X = 10;
+def P2_X = 380;

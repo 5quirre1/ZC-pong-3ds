@@ -1,0 +1,113 @@
+import "3ds.h";
+import "citro2d.h";
+import "game.zc";
+import "render.zc";
+
+fn main() {
+    gfxInitDefault();
+    C3D_Init(524288); 
+    C2D_Init(4096);
+    C2D_Prepare();
+    
+    let top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
+    consoleInit(GFX_BOTTOM, NULL);
+
+    //game state stuff
+    let p1_y = PADDLE_START_Y;
+    let p2_y = PADDLE_START_Y;
+    let ball_x = BALL_START_X;
+    let ball_y = BALL_START_Y;
+    let ball_dx = BALL_START_VX;
+    let ball_dy = BALL_START_VY;
+    let score1 = 0;
+    let score2 = 0;
+    
+    //frame counters
+    let ai_frame = 0;
+    let last_score1 = -1;
+    let last_score2 = -1;
+
+    // colors
+    let white = C2D_Color32(255, 255, 255, 255);
+    let black = C2D_Color32(0, 0, 0, 255);
+
+    while (aptMainLoop()) {
+        //get the input
+        hidScanInput();
+        let kHeld = hidKeysHeld();
+        if (kHeld & KEY_START) { break; }
+
+        //update player paddle
+        p1_y = update_player_paddle(p1_y, kHeld);
+
+        //update the ai paddle
+        ai_frame += 1;
+        let should_update_ai = ai_frame >= 2;
+        if (should_update_ai) { ai_frame = 0; }
+        p2_y = update_ai_paddle(p2_y, ball_y, should_update_ai);
+
+        //ball pos updating
+        ball_x += ball_dx;
+        ball_y += ball_dy;
+
+        //wall collisions
+        let ball_max_y = SCREEN_HEIGHT - BALL_SIZE;
+        if (ball_y <= 0) {
+            ball_y = 1;
+            ball_dy = -ball_dy;
+        } else if (ball_y >= ball_max_y) {
+            ball_y = ball_max_y - 1;
+            ball_dy = -ball_dy;
+        }
+
+        //left paddle coll
+        if (check_paddle_collision(ball_x, ball_y, ball_dx, p1_y, true)) {
+            ball_dx = -ball_dx;
+            ball_x = P1_X + PADDLE_W + 1;
+            ball_dy = calculate_bounce_angle(ball_y, p1_y);
+        }
+
+        //right paddle coll
+        if (check_paddle_collision(ball_x, ball_y, ball_dx, p2_y, false)) {
+            ball_dx = -ball_dx;
+            ball_x = P2_X - BALL_SIZE - 1;
+            ball_dy = calculate_bounce_angle(ball_y, p2_y);
+        }
+
+        //scoring
+        if (ball_x < 0) {
+            score2 += 1;
+            ball_x = BALL_START_X;
+            ball_y = BALL_START_Y;
+            ball_dx = BALL_START_VX;
+            ball_dy = BALL_START_VY;
+            p1_y = PADDLE_START_Y;
+            p2_y = PADDLE_START_Y;
+        } else if (ball_x > SCREEN_WIDTH) {
+            score1 += 1;
+            ball_x = BALL_START_X;
+            ball_y = BALL_START_Y;
+            ball_dx = -BALL_START_VX;
+            ball_dy = -BALL_START_VY;
+            p1_y = PADDLE_START_Y;
+            p2_y = PADDLE_START_Y;
+        }
+
+        //rendering
+        C3D_FrameBegin(2);
+        draw_game(top, p1_y, p2_y, ball_x, ball_y, white, black);
+        C3D_FrameEnd(0);
+        
+        // display the score
+        if (draw_score(score1, score2, last_score1, last_score2)) {
+            last_score1 = score1;
+            last_score2 = score2;
+        }
+        
+        gspWaitForVBlank();
+    }
+
+    C2D_Fini();
+    C3D_Fini();
+    gfxExit();
+}
